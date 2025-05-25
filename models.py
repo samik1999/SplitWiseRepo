@@ -13,6 +13,10 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     password_hash = Column(String)
 
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
 class Group(Base):
     __tablename__ = 'groups'
 
@@ -61,7 +65,6 @@ class Settlement(Base):
     to_user = Column(Integer, ForeignKey('users.id'))
     amount = Column(Numeric)
     settled_at = Column(DateTime, default=datetime.utcnow)
-
 
 class UserCreate(BaseModel):
     name: str
