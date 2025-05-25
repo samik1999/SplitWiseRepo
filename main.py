@@ -46,6 +46,12 @@ def signup(user: model.UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
+@app.post("/login")
+def login(user: model.UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(model.User).filter(model.User.email == user.email).first()
+    if not db_user or db_user.password_hash != user.password:
+        raise HTTPException(status_code=400, detail="Invalid email or password")
+    return {"message": f"Welcome back, {db_user.name}!"}
 
 @app.post("/groups")
 def create_group(group: schemas.GroupCreate, db: Session = Depends(get_db)):
