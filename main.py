@@ -37,7 +37,6 @@ app = FastAPI()
 def read_user(user_id: int, db: Session = Depends(get_db)):
     return db.query(model.User).filter(model.User.id == user_id).first()
 
-
 @app.post("/signup")
 def signup(user: model.UserCreate, db: Session = Depends(get_db)):
     db_user = model.User(name=user.name, email=user.email, password_hash=user.password)
