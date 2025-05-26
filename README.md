@@ -19,6 +19,9 @@ python3 -m uvicorn main:app --reload --port 8080
 # Start the API on http://localhost:8080
 # Automatically create the necessary tables in the test.db SQLite database
 
+# Command to see table data
+  sqlite3 test.db
+  
 # Table Schemas
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
