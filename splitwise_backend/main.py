@@ -9,16 +9,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime
 import schemas
 import models as model
+from models import Base
 import crud as crud
-
-Base = declarative_base()
 
 DATABASE_URL = "sqlite:///./test.db"  #
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
-
-Base = declarative_base()
 
 # Create the tables
 Base.metadata.create_all(bind=engine)
