@@ -14,7 +14,7 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 
 # Step 4: Run the FastAPI Application
-uvicorn main:app --reload --port 8080
+python3 -m uvicorn main:app --reload --port 8080
 # This will:
 # Start the API on http://localhost:8080
 # Automatically create the necessary tables in the test.db SQLite database
