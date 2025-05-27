@@ -1,5 +1,10 @@
 # SplitWiseRepo
 A minimal backend clone of Splitwise using FastAPI and SQLite. Users can sign up, create groups, add members, add expenses, settle balances, and get a complete balance summary.
+# ToDo's
+1- Implement JWT Token Logic for maintaining session
+2- Implement Redis for caching frequently access splits, user details and login
+3- Set Up a Database Before Running a Script
+
 # Local Development Setup
 # Step 1: Clone the Repository
 git clone https://github.com/yourusername/SplitWiseRepo.git
