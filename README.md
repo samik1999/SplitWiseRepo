@@ -1,5 +1,6 @@
-# SplitWiseRepo
+# SplitWiseRepo(Just diving into my first FastAPI project—excited to see how it goes!)
 A minimal backend clone of Splitwise using FastAPI and SQLite. Users can sign up, create groups, add members, add expenses, settle balances, and get a complete balance summary.
+
 # Local Development Setup (Please follow the steps to run application in local (Python 3.9.6 version is required)
 # Step 1: Clone the Repository and checkout feature/SplitWiseBackend
 git clone https://github.com/samik1999/SplitWiseRepo.git
