@@ -5,7 +5,7 @@ A minimal backend clone of Splitwise using FastAPI and SQLite. Users can sign up
 # Step 1: Clone the Repository and checkout feature/SplitWiseBackend
 git clone https://github.com/samik1999/SplitWiseRepo.git
 cd SplitWiseRepo
-git checkout "feature/SpliWiseBackend"
+git checkout "feature/SplitWiseBackend"
 
 # Step 2: Create a Virtual Environment and Activate It
 python3 -m venv venv         
