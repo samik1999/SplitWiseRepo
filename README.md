@@ -1,138 +1,239 @@
 # SplitWiseRepo(Just diving into my first FastAPI project—excited to see how it goes!)
 A minimal backend clone of Splitwise using FastAPI and SQLite. Users can sign up, create groups, add members, add expenses, settle balances, and get a complete balance summary.
 
-# Local Development Setup (Please follow the steps to run application in local (Python 3.9.6 version is required)
-# Step 1: Clone the Repository and checkout feature/SplitWiseBackend
+# Local Development Setup Follow these steps to run the application on your local machine. (Python 3.8+ is recommended)
+# Step 1: Clone the Repository 
 git clone https://github.com/samik1999/SplitWiseRepo.git
+# Step 2:
 cd SplitWiseRepo
+# Step 3: checkout feature/SplitWiseBackend
 git checkout "feature/SpliWiseBackend"
+# step 4: 
+cd splitWiseBackendNew
 
-# Step 2: Create a Virtual Environment and Activate It
+# Step 5: Create a Virtual Environment and Activate It
 python3 -m venv venv         
 source venv/bin/activate    
 
-# Step 3: Install the Requirements
+# Step 6: Install the Requirements
 pip3 install -r requirements.txt
 
-# Step 4: Run the FastAPI Application
+# Step 7: Ensure Redis Server is Running
+This application uses Redis for caching. Make sure your Redis server is running.
+macOS (with Homebrew): redis-server (to run in foreground) or brew services start redis (to run in background).
+
+# Step 7: Run the FastAPI Application
 python3 -m uvicorn main:app --reload --port 8080
-# This will:
-# Start the API on http://localhost:8080
-# Automatically create the necessary tables in the test.db SQLite database
+
+<!-- This will:
+
+Start the API server on http://localhost:8080.
+Create the minimal_splitwise.db SQLite database file (if it doesn't exist) and the necessary tables when the application first starts up.
+You can access the API documentation (Swagger UI) at http://localhost:8080/api/v1/docs.  -->
 
 # Command to see table data (go to database and run select queries)
-  sqlite3 test.db
+  sqlite3 minimal_splitwise.db
   
 # Table Schemas
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100),
-    email VARCHAR(100) UNIQUE,
-    password_hash TEXT
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE, -- Usernames are unique
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password_plain VARCHAR(255) NOT NULL -- WARNING: Stores plain text passwords
 );
 
--- groups
 CREATE TABLE groups (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100),
-    created_by INTEGER REFERENCES users(id)
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    created_by_id INTEGER,
+    FOREIGN KEY(created_by_id) REFERENCES users (id)
 );
 
--- group_members
 CREATE TABLE group_members (
-    group_id INTEGER REFERENCES groups(id),
-    user_id INTEGER REFERENCES users(id),
-    PRIMARY KEY (group_id, user_id)
+    group_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    PRIMARY KEY (group_id, user_id),
+    FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE,
+    FOREIGN KEY(user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
--- expenses
 CREATE TABLE expenses (
-    id SERIAL PRIMARY KEY,
-    description TEXT,
-    amount NUMERIC,
-    created_by INTEGER REFERENCES users(id),
-    group_id INTEGER REFERENCES groups(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    description VARCHAR(255),
+    amount NUMERIC(10, 2), -- Storing amounts with 2 decimal places
+    created_by_id INTEGER,
+    group_id INTEGER,
+    created_at DATETIME DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')), -- SQLite way for default timestamp
+    FOREIGN KEY(created_by_id) REFERENCES users (id),
+    FOREIGN KEY(group_id) REFERENCES groups (id) ON DELETE CASCADE
 );
 
--- expense_splits
-CREATE TABLE expense_splits (
-    id SERIAL PRIMARY KEY,
-    expense_id INTEGER REFERENCES expenses(id),
-    user_id INTEGER REFERENCES users(id),
-    amount NUMERIC,
-    type VARCHAR(20) -- 'equal', 'manual', 'percentage'
-);
-
--- expense_payments
 CREATE TABLE expense_payments (
-    id SERIAL PRIMARY KEY,
-    expense_id INTEGER REFERENCES expenses(id),
-    paid_by INTEGER REFERENCES users(id),
-    amount NUMERIC
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    expense_id INTEGER,
+    paid_by_user_id INTEGER,
+    amount NUMERIC(10, 2),
+    FOREIGN KEY(expense_id) REFERENCES expenses (id) ON DELETE CASCADE,
+    FOREIGN KEY(paid_by_user_id) REFERENCES users (id) ON DELETE CASCADE,
+    UNIQUE (expense_id, paid_by_user_id) -- Assuming one payment entry per user for an expense
 );
 
--- settlements
+CREATE TABLE expense_splits (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    expense_id INTEGER,
+    user_id INTEGER,
+    amount NUMERIC(10, 2),
+    split_type_info VARCHAR(50), -- e.g., 'equal_share_calculated'
+    FOREIGN KEY(expense_id) REFERENCES expenses (id) ON DELETE CASCADE,
+    FOREIGN KEY(user_id) REFERENCES users (id) ON DELETE CASCADE,
+    UNIQUE (expense_id, user_id) -- Assuming one split entry per user for an expense
+);
+
 CREATE TABLE settlements (
-    id SERIAL PRIMARY KEY,
-    from_user INTEGER REFERENCES users(id),
-    to_user INTEGER REFERENCES users(id),
-    amount NUMERIC,
-    settled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    from_user_id INTEGER,
+    to_user_id INTEGER,
+    amount NUMERIC(10, 2),
+    settled_at DATETIME DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
+    FOREIGN KEY(from_user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY(to_user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
-# API Endpoints
+<!-- API Endpoints (Simplified - No JWT/Hashing)
+Base URL: http://localhost:8080/api/v1
 
-# User
-# Signup
-# POST /signup
-# Request Body:
+User Management
+Signup (Create User)
+Endpoint: POST /auth/signup
+Request Body: -->
 {
-  "name": "Alice",
-  "email": "alice@example.com",
+  "name": "AliceWonder", // Username must be unique
+  "email": "alice.wonder@example.com",
+  "password": "password123" 
+}
+
+<!-- Basic Login Check 
+Endpoint: POST /auth/login_basic
+Request Body: -->
+{
+  "email": "alice.wonder@example.com",
   "password": "password123"
 }
+<!-- Success Response: User's public info if credentials match. -->
 
-# Login (no auth)
-# POST /login
-# Request Body:
+
+<!-- Get User by Unique Name
+Endpoint: GET /users/name/{user_name}
+Example: GET /users/name/AliceWonder
+Get User by ID
+Endpoint: GET /users/id/{user_id}
+Example: GET /users/id/1
+Groups
+Create Group
+Endpoint: POST /groups
+Query Parameter: creator_user_name (string, required, e.g., ?creator_user_name=AliceWonder)
+Request Body: -->
+
 {
-  "email": "alice@example.com",
-  "password": "password123"
+  "name": "Wonderland Trip Fund"
 }
 
-# Groups
-# Create Group
-# POST /groups
+<!-- Add Member to Group
+Endpoint: POST /groups/add_member
+Query Parameters:
+group_name (string, required, e.g., ?group_name=Wonderland%20Trip%20Fund)
+user_name_to_add (string, required, e.g., &user_name_to_add=MadHatter)
+Request Body: (Empty)
+Expenses
+Create Expense
+Endpoint: POST /expenses
+Query Parameter: creator_user_name (string, required, e.g., ?creator_user_name=AliceWonder)
+Request Body (ExpenseCreateUsingNamesSchema): -->
+
 {
-  "name": "Trip to Goa",
-  "user": 1
+  "description": "Tea Party Supplies",
+  "amount": 150.75,
+  "group_name": "Wonderland Trip Fund",
+  "paid_by": [
+    {
+      "user_name": "AliceWonder",
+      "amount": 100.75
+    },
+    {
+      "user_name": "MadHatter",
+      "amount": 50.00
+    }
+  ],
+  "split_between": [
+    {
+      "user_name": "AliceWonder",
+      "amount": 75.38  // Or 1 for 'equal' if backend recalculates
+    },
+    {
+      "user_name": "MadHatter",
+      "amount": 75.37  // Or 1 for 'equal'
+    }
+  ],
+  "split_type": "equal" // "equal", "manual", or "percentage"
 }
 
-# Expenses
-# Create Expense
-# POST /expenses
+<!-- List Expenses Involving a User
+Endpoint: GET /expenses/user/{user_name}
+Example: GET /expenses/user/AliceWonder
+Balances & Settlements
+Get User's Balance Summary
+Endpoint: GET /balances/user/{user_name}
+Example: GET /balances/user/AliceWonder
+Settle Balance
+Endpoint: POST /settle
+Request Body (SettlementCreateUsingNamesSchema): -->
 {
-  "user": 1,
-  "group_id": 1,
-  "description": "Hotel",
-  "total_amount": 1000,
-  "splits": [
-  {"user_id": 1, "amount": 500},
-   {"user_id": 2, "amount": 500}]
+  "from_user_name": "MadHatter",
+  "to_user_name": "AliceWonder",
+  "amount": 25.50
 }
 
-# Balances
-# Get Balance Summary
-# GET /balance/{user_id}
+<!-- #Functionality of Each File (in app/) -->
+<!-- main.py: -->
 
-# Settlement
-# Settle Balance
-# POST /settle
-{
-  "from_user": 2,
-  "to_user": 1,
-  "amount": 500
-}
+This is the entry point that starts the FastAPI application.
+It initializes the app, sets up global configurations (like startup/shutdown events for database & Redis).
+It includes all the API routes defined in routers.py.
+Defines custom exception handlers to ensure consistent error responses.
+<!-- routers.py: -->
 
+Defines all the specific API paths (endpoints) like /auth/signup, /groups, /expenses.
+Handles incoming HTTP requests, validates request data using schemas from schemas.py.
+Calls functions from crud.py to interact with the database.
+
+<!-- crud.py: -->
+
+This file contains all the functions that directly interact with the database.
+Also interacts with redis_utils.py for caching or invalidating cached data.
+<!-- schemas.py: -->
+
+Defines the structure and data types for API requests and responses using Pydantic models.
+Ensures that incoming data is valid before it's processed.
+Helps in serializing data (converting Python objects to JSON) for responses.
+Includes the standard API response structures (StandardApiResponse, ErrorApiResponse).
+<!-- models.py: -->
+
+Defines the database table structures using SQLAlchemy ORM 
+Each class in this file  maps to a table in your SQLite database.
+
+<!-- security.py: -->
+
+In the current simplified version, this file mainly handles password verification (plain text comparison, as hashing was removed for debugging).
+
+<!-- redis_utils.py: -->
+
+Manages the connection to your Redis server (for caching).
+
+<!-- database.py: -->
+
+Sets up the connection to your database (SQLite in this case) using the DATABASE_URL from config.py.
+Provides the SessionLocal factory for creating database sessions (which crud.py uses to talk to the database).
+
+<!-- config.py: -->
+Manages all application settings and configurations.
 
