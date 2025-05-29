@@ -6,8 +6,8 @@ A minimal backend clone of Splitwise using FastAPI and SQLite. Users can sign up
 git clone https://github.com/samik1999/SplitWiseRepo.git
 # Step 2:
 cd SplitWiseRepo
-# Step 3: checkout feature/SplitWiseBackend
-git checkout "feature/SpliWiseBackend"
+# Step 3: checkout splitWiseBackend
+git checkout "splitWiseBackend"
 # step 4: 
 cd splitWiseBackendNew
 
